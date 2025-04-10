@@ -2,7 +2,7 @@ name: Build and Publish RocksDbSharp.Transactional
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -14,7 +14,8 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
@@ -32,6 +33,15 @@ jobs:
         run: |
           brew install cmake snappy zstd lz4 zlib
 
+      - name: Show RocksDB version
+        run: |
+          echo "RocksDB version to build:"
+          cat rocksdbversion
+
+      - name: Make build script executable
+        run: chmod +x build-rocksdb.sh
+        working-directory: build-native
+
       - name: Build native library
         run: ./build-rocksdb.sh
         working-directory: build-native
@@ -42,15 +52,18 @@ jobs:
         run: |
           dotnet restore
           dotnet build -c Release
-          dotnet pack -c Release -p:PackageVersion=1.0.1 -p:PackageId=RocksDbSharp.Transactional --output ./nupkg
-        working-directory: src/RocksDbSharp # ⚠️ Укажи путь к каталогу .csproj
+          dotnet pack -c Release \
+            -p:PackageVersion=1.0.1 \
+            -p:PackageId=RocksDbSharp.Transactional \
+            --output ./nupkg
+        working-directory: csharp
 
       - name: Upload package artifact
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
           name: rocksdbsharp-nuget
-          path: ./src/RocksDbSharp/nupkg/*.nupkg
+          path: csharp/nupkg/*.nupkg
 
   publish:
     name: Publish to GitHub Packages
@@ -58,7 +71,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download built package
+        uses: actions/download-artifact@v4
         with:
           name: rocksdbsharp-nuget
           path: ./nupkg
