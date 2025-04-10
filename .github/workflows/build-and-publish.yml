@@ -2,8 +2,7 @@ name: Build and Publish RocksDbSharp.Transactional
 
 on:
   push:
-    branches:
-      - master
+    branches: [master]
   workflow_dispatch:
 
 jobs:
@@ -31,24 +30,11 @@ jobs:
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install cmake snappy zstd lz4
+          brew install cmake snappy zstd lz4 zlib
 
       - name: Build native library
-        run: |
-          cd native
-          if [[ "${{ runner.os }}" == "Linux" ]]; then
-            ./build.sh linux
-            mkdir -p ../runtimes/linux-x64/native
-            cp librocksdb.so ../runtimes/linux-x64/native/
-          elif [[ "${{ runner.os }}" == "macOS" ]]; then
-            ./build.sh osx
-            mkdir -p ../runtimes/osx-x64/native
-            cp librocksdb.dylib ../runtimes/osx-x64/native/
-          else
-            ./build.cmd win-x64
-            mkdir -p ../runtimes/win-x64/native
-            cp rocksdb.dll ../runtimes/win-x64/native/
-          fi
+        run: ./build-rocksdb.sh
+        working-directory: build-native
         shell: bash
 
       - name: Pack NuGet (only once)
@@ -57,13 +43,14 @@ jobs:
           dotnet restore
           dotnet build -c Release
           dotnet pack -c Release -p:PackageVersion=1.0.1 -p:PackageId=RocksDbSharp.Transactional --output ./nupkg
+        working-directory: src/RocksDbSharp # ⚠️ Укажи путь к каталогу .csproj
 
       - name: Upload package artifact
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
           name: rocksdbsharp-nuget
-          path: ./nupkg/*.nupkg
+          path: ./src/RocksDbSharp/nupkg/*.nupkg
 
   publish:
     name: Publish to GitHub Packages
