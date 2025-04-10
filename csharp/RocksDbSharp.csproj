@@ -4,20 +4,33 @@
     <TargetFrameworks>netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <LangVersion>latest</LangVersion>
-    <PackageId>RocksDB</PackageId>
-    <Authors>Curiosity GmbH, Warren Falk</Authors>
-    <Company>Curiosity GmbH, Warren Falk</Company>
-    <RepositoryUrl>https://github.com/curiosity-ai/rocksdb-sharp</RepositoryUrl>
+
+    <PackageId>RocksDbSharp.Transactional</PackageId>
+    <Version>1.0.1</Version>
+
+    <Authors>Warren Falk, Curiosity GmbH, W1ngshot</Authors>
+    <Company>W1ngshot</Company>
+
+    <RepositoryUrl>https://github.com/W1ngshot/rocksdb-sharp</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <Description>.NET bindings for RocksDB, including the matching native libraries for Linux, Windows and macOS.</Description>
-    <PackageTags>rocksdb leveldb embedded database</PackageTags>
-    <Copyright>(c) Copyright 2016 Warren Falk, (c) Copyright 2023 Curiosity GmbH</Copyright>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
+    <Description>
+      Unofficial fork of RocksDbSharp with transaction support based on riemannulus/rocksdb-sharp (transaction-support branch).
+      Includes native libraries for Windows, Linux, and macOS.
+    </Description>
+    <PackageTags>rocksdb leveldb embedded database transactions dotnet csharp</PackageTags>
+
+    <Copyright>
+      (c) 2016 Warren Falk, (c) 2023 Curiosity GmbH, (modifications) (c) 2025 W1ngshot
+    </Copyright>
+
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
-    <Version>0.0.42</Version>
+
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IncludeReferencedProjects>true</IncludeReferencedProjects>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
     <PackageIcon>logo-128.png</PackageIcon>
   </PropertyGroup>
 
