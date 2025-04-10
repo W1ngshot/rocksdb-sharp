@@ -38,12 +38,36 @@ jobs:
           echo "RocksDB version to build:"
           cat rocksdbversion
 
-      - name: Make build script executable
-        run: chmod +x build-rocksdb.sh
-        working-directory: build-native
+      - name: Build native library (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          export HOMEBREW_PREFIX=$(brew --prefix)
 
-      - name: Build native library
-        run: ./build-rocksdb.sh
+          export ZLIB_INCLUDE="$HOMEBREW_PREFIX/include"
+          export ZLIB_LIB_RELEASE="$HOMEBREW_PREFIX/lib/libz.a"
+
+          export LZ4_INCLUDE="$HOMEBREW_PREFIX/include"
+          export LZ4_LIB_RELEASE="$HOMEBREW_PREFIX/lib/liblz4.a"
+
+          export SNAPPY_INCLUDE="$HOMEBREW_PREFIX/include"
+          export SNAPPY_LIB_RELEASE="$HOMEBREW_PREFIX/lib/libsnappy.a"
+
+          export ZSTD_INCLUDE="$HOMEBREW_PREFIX/include"
+          export ZSTD_LIB_RELEASE="$HOMEBREW_PREFIX/lib/libzstd.a"
+
+          export CFLAGS="-I$HOMEBREW_PREFIX/include"
+          export LDFLAGS="-L$HOMEBREW_PREFIX/lib"
+
+          chmod +x build-rocksdb.sh
+          ./build-rocksdb.sh
+        working-directory: build-native
+        shell: bash
+
+      - name: Build native library (non-macOS)
+        if: runner.os != 'macOS'
+        run: |
+          chmod +x build-rocksdb.sh
+          ./build-rocksdb.sh
         working-directory: build-native
         shell: bash
 
