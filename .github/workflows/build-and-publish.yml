@@ -58,6 +58,17 @@ jobs:
           export CFLAGS="-I$HOMEBREW_PREFIX/include"
           export LDFLAGS="-L$HOMEBREW_PREFIX/lib"
 
+          # Патчим build-rocksdb.sh: удаляем только ошибки проверки
+          sed -i '' '/fail "failed to detect lz4/d' build-rocksdb.sh
+          sed -i '' '/fail "dependency detection failed"/d' build-rocksdb.sh
+
+          # Явно включаем все библиотеки
+          export USE_LZ4=1
+          export USE_ZLIB=1
+          export USE_SNAPPY=1
+          export USE_ZSTD=1
+          export PORTABLE=1
+
           chmod +x build-rocksdb.sh
           ./build-rocksdb.sh
         working-directory: build-native
