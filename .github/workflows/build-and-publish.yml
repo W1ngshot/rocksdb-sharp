@@ -1,0 +1,83 @@
+name: Build and Publish RocksDbSharp.Transactional
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install cmake snappy zstd lz4
+
+      - name: Build native library
+        run: |
+          cd native
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            ./build.sh linux
+            mkdir -p ../runtimes/linux-x64/native
+            cp librocksdb.so ../runtimes/linux-x64/native/
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+            ./build.sh osx
+            mkdir -p ../runtimes/osx-x64/native
+            cp librocksdb.dylib ../runtimes/osx-x64/native/
+          else
+            ./build.cmd win-x64
+            mkdir -p ../runtimes/win-x64/native
+            cp rocksdb.dll ../runtimes/win-x64/native/
+          fi
+        shell: bash
+
+      - name: Pack NuGet (only once)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          dotnet restore
+          dotnet build -c Release
+          dotnet pack -c Release -p:PackageVersion=1.0.1 -p:PackageId=RocksDbSharp.Transactional --output ./nupkg
+
+      - name: Upload package artifact
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rocksdbsharp-nuget
+          path: ./nupkg/*.nupkg
+
+  publish:
+    name: Publish to GitHub Packages
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: rocksdbsharp-nuget
+          path: ./nupkg
+
+      - name: Publish to GitHub Packages
+        run: |
+          dotnet nuget push ./nupkg/*.nupkg \
+            --source "github" \
+            --api-key ${{ secrets.GITHUB_TOKEN }}
